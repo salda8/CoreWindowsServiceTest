@@ -7,32 +7,44 @@ namespace Complaya
 {
     public class FolderWatcher : IDisposable
     {
-        public FileSystemWatcher FileWatcher { get; set; }
-        public FolderWatcherConfiguration Configuration { get; set; }
+        public FileSystemWatcher FileWatcher { get;private set; }
+        public FolderWatcherConfiguration Configuration { get; }
 
         public List<string> FilesAdded { get; set; } = new List<string>();
 
         public FolderWatcher(IOptions<FolderWatcherConfiguration> configuration, Serilog.ILogger logger)
         {
-            FileWatcher = new FileSystemWatcher();
             Configuration = configuration.Value;
 
             this.logger = logger;
             var filter = Configuration.Filter;
-            if (!string.IsNullOrWhiteSpace(filter))
-            {
-                FileWatcher.Filter = filter;
-            }
-
             var path = Configuration.Path;
-            if (!string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(filter) || string.IsNullOrWhiteSpace(path))
             {
-                FileWatcher.Path = path;
+                throw new ArgumentNullException("Missing configuration.");
             }
-
+            FileWatcher = new FileSystemWatcher(path, filter);
+            
             FileWatcher.Created += Created;
             FileWatcher.Deleted += Deleted;
+            FileWatcher.Changed += Changed;
+            FileWatcher.Error += OnError;
 
+            FileWatcher.EnableRaisingEvents = true;
+
+            
+
+        }
+
+        private void OnError(object sender, ErrorEventArgs e)
+        {
+            logger.Error($"The FileSystemWatcher has detected an error", e.GetException());
+        }
+
+        private void Changed(object sender, FileSystemEventArgs e)
+        {
+            WatcherChangeTypes wct = e.ChangeType;
+            logger.Information("File {0} {1}", e.FullPath, wct.ToString());
         }
 
         private void Deleted(object sender, FileSystemEventArgs e)

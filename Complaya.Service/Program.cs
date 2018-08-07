@@ -43,7 +43,7 @@ namespace Complaya.Service
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(log, kxClient);
+                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<FolderWatcher>());
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>
@@ -81,12 +81,10 @@ namespace Complaya.Service
                     builder.AddSerilog();
                 });
             services.Configure<HttpClientConfiguration>(configuration.GetSection("HttpClient"));
-            services.Configure<FileWatcherConfiguration>(Configuration.GetSection("FileWatcher"));
+            services.Configure<FolderWatcherConfiguration>(configuration.GetSection("FolderWatcher"));
             services.AddSingleton<Serilog.ILogger>(log);
             services.AddServices();
-            var serviceProvider = services.BuildServiceProvider();
-            //var logger = serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger>();
-            log.Information("Ahoj");
+           
 
         }
         private static Serilog.ILogger log;

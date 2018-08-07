@@ -22,7 +22,7 @@ namespace Complaya
                     TimeSpan.FromSeconds(10)
                 })).AddHttpMessageHandler<SerilogHttpMessageHandler>();
 
-            
+            services.AddScoped<FolderWatcher>();
         }
     }
 
