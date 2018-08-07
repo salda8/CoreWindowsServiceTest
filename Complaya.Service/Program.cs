@@ -41,7 +41,7 @@ namespace Complaya.Service
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(controller);
+                        return new ExampleService(controller, Log.Logger);
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>

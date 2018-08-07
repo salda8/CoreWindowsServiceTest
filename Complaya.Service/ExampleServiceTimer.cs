@@ -3,6 +3,7 @@ using PeterKottas.DotNetCore.WindowsService.Base;
 using PeterKottas.DotNetCore.WindowsService.Interfaces;
 using System;
 using System.IO;
+using Serilog;
 
 namespace Complaya.Service
 {
@@ -29,17 +30,17 @@ namespace Complaya.Service
             StartBase();
             Timers.Start("Poller", 1000, () =>
             {
-                File.AppendAllText(fileName, string.Format("Polling at {0}\n", DateTime.Now.ToString("o")));
+                logger.Information(string.Format("Polling at {0}\n", DateTime.Now.ToString("o")));
             });
-            Console.WriteLine("I started");
-            File.AppendAllText(fileName, "Started\n");
+            
+            logger.Information("Started");
         }
 
         public void Stop()
         {
             StopBase();
-            File.AppendAllText(fileName, "Stopped\n");
-            Console.WriteLine("I stopped");
+            logger.Information("Stopped");
+            
         }
     }
 }
