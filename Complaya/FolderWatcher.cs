@@ -32,22 +32,20 @@ namespace Complaya
 
             FileWatcher.EnableRaisingEvents = true;
 
-            
-
         }
 
-        private void OnError(object sender, ErrorEventArgs e)
+        public virtual void OnError(object sender, ErrorEventArgs e)
         {
             logger.Error($"The FileSystemWatcher has detected an error", e.GetException());
         }
 
-        private void Changed(object sender, FileSystemEventArgs e)
+        public virtual void Changed(object sender, FileSystemEventArgs e)
         {
             WatcherChangeTypes wct = e.ChangeType;
             logger.Information("File {0} {1}", e.FullPath, wct.ToString());
         }
 
-        private void Deleted(object sender, FileSystemEventArgs e)
+        public virtual void Deleted(object sender, FileSystemEventArgs e)
         {
             if (FilesAdded.Remove(e.FullPath))
             {
@@ -56,7 +54,7 @@ namespace Complaya
 
         }
 
-        private void Created(object sender, FileSystemEventArgs e)
+       public virtual void Created(object sender, FileSystemEventArgs e)
         {
             FilesAdded.Add(e.FullPath);
             logger.Information($"New file added {e.Name}.");

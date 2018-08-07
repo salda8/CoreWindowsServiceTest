@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Timers;
 using PeterKottas.DotNetCore.WindowsService;
+using Microsoft.Extensions.Options;
 using Complaya;
 using Serilog;  
 
@@ -19,11 +20,12 @@ namespace Complaya.Service
         private KxClient client;
         private FolderWatcher folderWatcher;
                
-        public ExampleService(ILogger logger, KxClient client, FolderWatcher folderWatcher)
+        public ExampleService(ILogger logger, KxClient client, FolderWatcher folderWatcher, IOptions<DocumentTypeConfiguration> documentTypeConfiguration)
         {
             this.logger = logger;
             this.client = client;
             this.folderWatcher = folderWatcher;
+            
             
           
         }
@@ -46,16 +48,30 @@ namespace Complaya.Service
 		{
 			logger.Information($"Polling at {DateTime.Now.ToString("o")}");
             logger.Information(folderWatcher.FilesAdded.Count.ToString());
-            logger.Information(folderWatcher.FileWatcher.Path);
-            logger.Information(folderWatcher.FileWatcher.Filter);
+           
             foreach(var file in folderWatcher.FilesAdded){
-                logger.Information($"File detected:{file}");
+                var documentToSend = new DocumentToSend();
+                documentToSend.FileName = Path.GetFilename(file);
+                using(var bytesToSend = new System.IO.ReadAllBytes(file)){
+                var documentToSend = new DocumentToSend();
+                documentToSend.Data = bytesToSend;
+                }
+                
+                var result = await client.Post(documentToSend,"" );
+                if(result.Success){
+
+
+                }
+                
+                
+                logger.Information($"File to process detected:{file}");
+                }
 
                 
             }
             
             //client.Post();
-		}
+		
 
 		public void Stop()
         {

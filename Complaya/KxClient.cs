@@ -11,7 +11,7 @@ namespace Complaya
     public class KxClient
     {
         public const string JsonDocumentType = "application/json";
-        HttpClient HttpClient { get; }
+        public HttpClient HttpClient { get; }
         public KxClient(HttpClient client,IOptions<HttpClientConfiguration> config, Serilog.ILogger logger)
         {
             HttpClient = client;

@@ -37,13 +37,15 @@ namespace Complaya.Service
             ServiceRunner<ExampleService>.Run(config =>
             {
                 var serviceProvider = services.BuildServiceProvider();
+                var config = serviceProvider.GetRequiredService<DocumentTypeConfiguration>();
+               
                 var kxClient = serviceProvider.GetRequiredService<KxClient>();
                 var name = config.GetDefaultName();
                 config.Service(serviceConfig =>
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<FolderWatcher>());
+                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<FolderWatcher>(),Configuration.GetSection("DocumentTypes").Get<DocumentTypeConfiguration>());
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>
@@ -82,6 +84,8 @@ namespace Complaya.Service
                 });
             services.Configure<HttpClientConfiguration>(configuration.GetSection("HttpClient"));
             services.Configure<FolderWatcherConfiguration>(configuration.GetSection("FolderWatcher"));
+            services.Configure<DocumentTypeConfiguration>(configuration.GetSection("DocumentTypes"));
+
             services.AddSingleton<Serilog.ILogger>(log);
             services.AddServices();
            
