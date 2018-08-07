@@ -23,14 +23,14 @@ namespace Complaya.Service
             this.controller = controller;
         }
 
-        private string fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
+        //private string fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
         
         public void Start()
         {
             StartBase();
             Timers.Start("Poller", 1000, () =>
             {
-                logger.Information(string.Format("Polling at {0}\n", DateTime.Now.ToString("o")));
+                logger.Information($"Polling at {DateTime.Now.ToString("o")}");
             });
             
             logger.Information("Started");

@@ -31,61 +31,67 @@ namespace Complaya.Service
                 .AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true)
                 .Build();
 #endif
-            var fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
+            //var fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
             ConfigureServices(configuration);
 
             ServiceRunner<ExampleService>.Run(config =>
             {
+                var serviceProvider = services.BuildServiceProvider();
+                var kxClient = serviceProvider.GetRequiredService<KxClient>();
                 var name = config.GetDefaultName();
                 config.Service(serviceConfig =>
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(controller, Log.Logger);
+                        return new ExampleService(log, kxClient);
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>
                     {
-                        Log.Logger.Information("Service {0} started", name);
+                        log.Information("Service {0} started", name);
                         service.Start();
                     });
 
                     serviceConfig.OnStop(service =>
                     {
-                        Log.Logger.Information("Service {0} stopped", name);
+                        log.Information("Service {0} stopped", name);
                         service.Stop();
                     });
 
                     serviceConfig.OnShutdown(service =>
                     {
-                        Log.Logger.Information("Service {0} shutdown", name);
+                        log.Information("Service {0} shutdown", name);
                         //File.AppendAllText(fileName, $"Service {name} shutdown\n");
                     });
 
                     serviceConfig.OnError(e =>
                     {
                         //File.AppendAllText(fileName, $"Exception: {e.ToString()}\n");
-                        Log.Logger.Error("Service {0} errored with exception : {1}", name, e.Message);
+                        log.Error("Service {0} errored with exception : {1}", name, e.Message);
                     });
                 });
             });
         }
 
         public static void ConfigureServices(IConfiguration configuration){
-            Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(configuration)
-                .MinimumLevel.Debug()
-                .CreateLogger();
-            //logger = Logger;
-
-            var services = new ServiceCollection();
+            log = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
+                
             services.AddLogging(builder =>
                 {
                     builder.AddSerilog();
                 });
+            services.Configure<HttpClientConfiguration>(configuration.GetSection("HttpClient"));
+            services.Configure<FileWatcherConfiguration>(Configuration.GetSection("FileWatcher"));
+            services.AddSingleton<Serilog.ILogger>(log);
+            services.AddServices();
+            var serviceProvider = services.BuildServiceProvider();
+            //var logger = serviceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger>();
+            log.Information("Ahoj");
 
-            Complaya.Bootstrap.Configure(services);
         }
+        private static Serilog.ILogger log;
+         private static IServiceCollection services = new ServiceCollection();
+         
 
-        public static Serilog.ILogger logger;
     }
 }

@@ -12,22 +12,23 @@ namespace Complaya.Service
 {
     public class ExampleService : IMicroService
     {
-        private IMicroServiceController controller=null;
+        
         private ILogger logger;
 
 		private Timer timer = new Timer(1000);
+        private KxClient client;
        
-        public ExampleService(IMicroServiceController controller, ILogger logger)
+        public ExampleService(ILogger logger, KxClient client)
         {
             this.logger = logger;
-            this.controller = controller;
+            this.client = client;
         }
 
-        private string fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
+        //private string fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
         public void Start()
         {
           
-            logger.Information("Started\n");
+            logger.Information("Started");
 
             /**
              * A timer is a simple example. But this could easily 
@@ -39,13 +40,13 @@ namespace Complaya.Service
 
 		private void _timer_Elapsed(object sender, ElapsedEventArgs e)
 		{
-			logger.Information(fileName, string.Format("Polling at {0}\n", DateTime.Now.ToString("o")));
+			logger.Information($"Polling at {DateTime.Now.ToString("o")}");
 		}
 
 		public void Stop()
         {
 			timer.Stop();
-            logger.Information("Stopped\n");
+            logger.Information("Stopped");
            
         }
     }

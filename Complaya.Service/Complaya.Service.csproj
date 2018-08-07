@@ -22,7 +22,13 @@
 
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.1" />
 
+    <PackageReference Include="Serilog.Formatting.Compact" Version="1.0.0" />
+
     <PackageReference Include="Serilog.Settings.Configuration" Version="2.6.1" />
+
+    <PackageReference Include="Serilog.Sinks.Async" Version="1.3.0" />
+
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
 
     <PackageReference Include="Serilog.Sinks.Email" Version="2.3.0" />
 
@@ -31,10 +37,20 @@
     <PackageReference Include="Serilog.Sinks.MongoDb" Version="3.1.0" />
 
     <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
+
+    <PackageReference Include="Serilog.Sinks.RollingFileAlternate" Version="2.0.9" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Complaya\Complaya.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
