@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using Polly;
 using Serilog;
+using MongoDbGenericRepository;
 
 namespace Complaya
 {
@@ -23,6 +24,8 @@ namespace Complaya
                 })).AddHttpMessageHandler<SerilogHttpMessageHandler>();
 
             services.AddScoped<FolderWatcher>();
+            services.AddScoped<IVirtualUserConnector, VirtualUserConnector>();
+            services.AddScoped<IBaseMongoRepository, GenericMongoRepository>();
         }
     }
 

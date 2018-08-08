@@ -7,7 +7,7 @@ namespace Complaya
 {
     public class FolderWatcher : IDisposable
     {
-        public FileSystemWatcher FileWatcher { get;private set; }
+        public FileSystemWatcher FileWatcher { get; private set; }
         public FolderWatcherConfiguration Configuration { get; }
 
         public List<string> FilesAdded { get; set; } = new List<string>();
@@ -24,14 +24,23 @@ namespace Complaya
                 throw new ArgumentNullException("Missing configuration.");
             }
             FileWatcher = new FileSystemWatcher(path, filter);
-            
-            FileWatcher.Created += Created;
-            FileWatcher.Deleted += Deleted;
-            FileWatcher.Changed += Changed;
+
+            FileWatcher.Created += OnCreated;
+            FileWatcher.Deleted += OnDeleted;
+            FileWatcher.Changed += OnChanged;
             FileWatcher.Error += OnError;
 
             FileWatcher.EnableRaisingEvents = true;
+            ProcessExistingFiles();
 
+        }
+
+        private void ProcessExistingFiles()
+        {
+            if (Configuration.ShouldProcessAlreadyExistingFiles)
+            {
+                FilesAdded.AddRange(Directory.GetFiles(Configuration.Path, Configuration.Filter));
+            }
         }
 
         public virtual void OnError(object sender, ErrorEventArgs e)
@@ -39,13 +48,13 @@ namespace Complaya
             logger.Error($"The FileSystemWatcher has detected an error", e.GetException());
         }
 
-        public virtual void Changed(object sender, FileSystemEventArgs e)
+        public virtual void OnChanged(object sender, FileSystemEventArgs e)
         {
             WatcherChangeTypes wct = e.ChangeType;
             logger.Information("File {0} {1}", e.FullPath, wct.ToString());
         }
 
-        public virtual void Deleted(object sender, FileSystemEventArgs e)
+        public virtual void OnDeleted(object sender, FileSystemEventArgs e)
         {
             if (FilesAdded.Remove(e.FullPath))
             {
@@ -54,7 +63,7 @@ namespace Complaya
 
         }
 
-       public virtual void Created(object sender, FileSystemEventArgs e)
+        public virtual void OnCreated(object sender, FileSystemEventArgs e)
         {
             FilesAdded.Add(e.FullPath);
             logger.Information($"New file added {e.Name}.");
@@ -76,6 +85,7 @@ namespace Complaya
             {
                 if (disposing)
                 {
+
                     FileWatcher.Dispose();
                     FileWatcher = null;
 

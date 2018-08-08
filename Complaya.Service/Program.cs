@@ -12,40 +12,41 @@ using Complaya;
 using PeterKottas.DotNetCore.WindowsService.Base;
 using PeterKottas.DotNetCore.WindowsService;
 using PeterKottas.DotNetCore.WindowsService.Interfaces;
-
+using Microsoft.Extensions.Options;
+using MongoDbGenericRepository;
 
 namespace Complaya.Service
 {
-	public class Program
+    public class Program
     {
+        static IConfiguration Configuration;
         public static void Main(string[] args)
         {
-            #if !DEBUG
-            var configuration = new ConfigurationBuilder()
+#if !DEBUG
+            Configuration = new ConfigurationBuilder()
                 .SetBasePath(PlatformServices.Default.Application.ApplicationBasePath)
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 #else
-            var configuration = new ConfigurationBuilder()
+            Configuration = new ConfigurationBuilder()
                 .SetBasePath(PlatformServices.Default.Application.ApplicationBasePath)
                 .AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true)
                 .Build();
 #endif
-            //var fileName = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, "log.txt");
-            ConfigureServices(configuration);
+            ConfigureServices();
 
             ServiceRunner<ExampleService>.Run(config =>
             {
-                var serviceProvider = services.BuildServiceProvider();
-                var config = serviceProvider.GetRequiredService<DocumentTypeConfiguration>();
-               
+                var vuConnector = serviceProvider.GetRequiredService<IVirtualUserConnector>();
                 var kxClient = serviceProvider.GetRequiredService<KxClient>();
+                var repository = serviceProvider.GetRequiredService<IBaseMongoRepository>();
+                var documentTypeConfig = serviceProvider.GetRequiredService<IOptions<DocumentTypeConfiguration>>();
                 var name = config.GetDefaultName();
                 config.Service(serviceConfig =>
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<FolderWatcher>(),Configuration.GetSection("DocumentTypes").Get<DocumentTypeConfiguration>());
+                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<FolderWatcher>(), documentTypeConfig, vuConnector, repository);
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>
@@ -75,25 +76,29 @@ namespace Complaya.Service
             });
         }
 
-        public static void ConfigureServices(IConfiguration configuration){
-            log = new LoggerConfiguration().ReadFrom.Configuration(configuration).CreateLogger();
-                
+        public static void ConfigureServices()
+        {
+            log = new LoggerConfiguration().ReadFrom.Configuration(Configuration).CreateLogger();
+
             services.AddLogging(builder =>
                 {
                     builder.AddSerilog();
                 });
-            services.Configure<HttpClientConfiguration>(configuration.GetSection("HttpClient"));
-            services.Configure<FolderWatcherConfiguration>(configuration.GetSection("FolderWatcher"));
-            services.Configure<DocumentTypeConfiguration>(configuration.GetSection("DocumentTypes"));
-
+            services.Configure<HttpClientConfiguration>(Configuration.GetSection("HttpClient"));
+            services.Configure<FolderWatcherConfiguration>(Configuration.GetSection("FolderWatcher"));
+            services.Configure<DocumentTypeConfiguration>(Configuration.GetSection("DocumentTypes"));
+            services.Configure<MongoConfigurationOptions>(Configuration.GetSection("MongoDatabase"));
+            services.AddOptions();
             services.AddSingleton<Serilog.ILogger>(log);
             services.AddServices();
-           
+            serviceProvider = services.BuildServiceProvider();
+
 
         }
         private static Serilog.ILogger log;
-         private static IServiceCollection services = new ServiceCollection();
-         
+        private static IServiceCollection services = new ServiceCollection();
+        private static IServiceProvider serviceProvider;
+
 
     }
 }
