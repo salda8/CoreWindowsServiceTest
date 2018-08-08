@@ -56,7 +56,7 @@ namespace Complaya.Service
         private void _timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             logger.Information($"Starting file processsing at {DateTime.Now.ToString("o")}");
-            logger.Information($"Detected {folderWatcher.FilesAdded.Count().ToString()} to process.");
+            logger.Information($"Detected {folderWatcher.FilesAdded.Count().ToString()} files to process.");
             virtualUserConnector.Connect();
 
             Parallel.ForEach(folderWatcher.FilesAdded, async (pathToFile) => await SendAndProcessDocument(pathToFile));
