@@ -5,13 +5,12 @@ using Microsoft.Extensions.Options;
 
 namespace Complaya
 {
-    public class FolderWatcher : IDisposable
+    public class FolderWatcher : IFolderWatcher
     {
         public FileSystemWatcher FileWatcher { get; private set; }
         public FolderWatcherConfiguration Configuration { get; }
 
-        public List<string> FilesAdded { get; set; } = new List<string>();
-
+        public IEnumerable<string> FilesAdded { get => filesAdded;  }
         public FolderWatcher(IOptions<FolderWatcherConfiguration> configuration, Serilog.ILogger logger)
         {
             Configuration = configuration.Value;
@@ -23,7 +22,14 @@ namespace Complaya
             {
                 throw new ArgumentNullException("Missing configuration.");
             }
-            FileWatcher = new FileSystemWatcher(path, filter);
+
+            ProcessExistingFiles();
+
+        }
+
+        public void Start()
+        {
+            FileWatcher = new FileSystemWatcher(Configuration.Path, Configuration.Filter);
 
             FileWatcher.Created += OnCreated;
             FileWatcher.Deleted += OnDeleted;
@@ -31,15 +37,13 @@ namespace Complaya
             FileWatcher.Error += OnError;
 
             FileWatcher.EnableRaisingEvents = true;
-            ProcessExistingFiles();
-
         }
 
         private void ProcessExistingFiles()
         {
             if (Configuration.ShouldProcessAlreadyExistingFiles)
             {
-                FilesAdded.AddRange(Directory.GetFiles(Configuration.Path, Configuration.Filter));
+                filesAdded.AddRange(Directory.GetFiles(Configuration.Path, Configuration.Filter));
             }
         }
 
@@ -56,7 +60,7 @@ namespace Complaya
 
         public virtual void OnDeleted(object sender, FileSystemEventArgs e)
         {
-            if (FilesAdded.Remove(e.FullPath))
+            if (filesAdded.Remove(e.FullPath))
             {
                 logger.Information($"File removed {e.Name}.");
             }
@@ -65,7 +69,7 @@ namespace Complaya
 
         public virtual void OnCreated(object sender, FileSystemEventArgs e)
         {
-            FilesAdded.Add(e.FullPath);
+            filesAdded.Add(e.FullPath);
             logger.Information($"New file added {e.Name}.");
         }
 
@@ -74,10 +78,12 @@ namespace Complaya
             FileWatcher.NotifyFilter = notifyFilters;
         }
         private readonly Serilog.ILogger logger;
+         private List<string> filesAdded = new List<string>();
 
 
         #region IDisposable Support
         private bool disposedValue = false;
+       
 
         protected virtual void Dispose(bool disposing)
         {

@@ -23,9 +23,10 @@ namespace Complaya
                     TimeSpan.FromSeconds(10)
                 })).AddHttpMessageHandler<SerilogHttpMessageHandler>();
 
-            services.AddScoped<FolderWatcher>();
+            services.AddScoped<IFolderWatcher,FolderWatcher>();
             services.AddScoped<IVirtualUserConnector, VirtualUserConnector>();
             services.AddScoped<IBaseMongoRepository, GenericMongoRepository>();
+        
         }
     }
 

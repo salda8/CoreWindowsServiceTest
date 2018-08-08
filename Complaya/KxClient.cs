@@ -12,7 +12,7 @@ namespace Complaya
     {
         public const string JsonDocumentType = "application/json";
         public HttpClient HttpClient { get; }
-        public KxClient(HttpClient client,IOptions<HttpClientConfiguration> config, Serilog.ILogger logger)
+        public KxClient(HttpClient client, IOptions<HttpClientConfiguration> config, Serilog.ILogger logger)
         {
             HttpClient = client;
             HttpClient.BaseAddress = new Uri(config.Value.BaseAddress);

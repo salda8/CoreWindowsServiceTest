@@ -10,6 +10,7 @@ using Serilog;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDbGenericRepository;
+using System.Linq;
 
 namespace Complaya.Service
 {
@@ -19,14 +20,14 @@ namespace Complaya.Service
         private ILogger logger;
         private Timer timer = new Timer(10000);
         private KxClient client;
-        private FolderWatcher folderWatcher;
+        private IFolderWatcher folderWatcher;
         private readonly IVirtualUserConnector virtualUserConnector;
         private readonly IBaseMongoRepository repository;
         private readonly HashSet<string> typesToArchive;
         private readonly HashSet<string> typesToSendToVu;
         private readonly DocumentTypeConfiguration documentTypeConfig;
 
-        public ExampleService(ILogger logger, KxClient client, FolderWatcher folderWatcher, IOptions<DocumentTypeConfiguration> documentTypeConfiguration, IVirtualUserConnector virtualUserConnector, IBaseMongoRepository repository)
+        public ExampleService(ILogger logger, KxClient client, IFolderWatcher folderWatcher, IOptions<DocumentTypeConfiguration> documentTypeConfiguration, IVirtualUserConnector virtualUserConnector, IBaseMongoRepository repository)
         {
             this.logger = logger;
             this.client = client;
@@ -55,7 +56,7 @@ namespace Complaya.Service
         private void _timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             logger.Information($"Starting file processsing at {DateTime.Now.ToString("o")}");
-            logger.Information($"Detected {folderWatcher.FilesAdded.Count.ToString()} to process.");
+            logger.Information($"Detected {folderWatcher.FilesAdded.Count().ToString()} to process.");
             virtualUserConnector.Connect();
 
             Parallel.ForEach(folderWatcher.FilesAdded, async (pathToFile) => await SendAndProcessDocument(pathToFile));

@@ -46,7 +46,7 @@ namespace Complaya.Service
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<FolderWatcher>(), documentTypeConfig, vuConnector, repository);
+                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<IFolderWatcher>(), documentTypeConfig, vuConnector, repository);
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>
@@ -64,12 +64,12 @@ namespace Complaya.Service
                     serviceConfig.OnShutdown(service =>
                     {
                         log.Information("Service {0} shutdown", name);
-                        //File.AppendAllText(fileName, $"Service {name} shutdown\n");
+                        
                     });
 
                     serviceConfig.OnError(e =>
                     {
-                        //File.AppendAllText(fileName, $"Exception: {e.ToString()}\n");
+                        
                         log.Error("Service {0} errored with exception : {1}", name, e.Message);
                     });
                 });
