@@ -14,6 +14,7 @@ using PeterKottas.DotNetCore.WindowsService;
 using PeterKottas.DotNetCore.WindowsService.Interfaces;
 using Microsoft.Extensions.Options;
 using MongoDbGenericRepository;
+using FluentScheduler;
 
 namespace Complaya.Service
 {
@@ -41,12 +42,14 @@ namespace Complaya.Service
                 var kxClient = serviceProvider.GetRequiredService<KxClient>();
                 var repository = serviceProvider.GetRequiredService<IBaseMongoRepository>();
                 var documentTypeConfig = serviceProvider.GetRequiredService<IOptions<DocumentTypeConfiguration>>();
+                var scheduler = serviceProvider.GetRequiredService<IOptions<ProcessDocumentConfiguration>>();//ServiceScheduler>();
                 var name = config.GetDefaultName();
                 config.Service(serviceConfig =>
                 {
                     serviceConfig.ServiceFactory((extraArguments, controller) =>
                     {
-                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<IFolderWatcher>(), documentTypeConfig, vuConnector, repository);
+                     
+                        return new ExampleService(log, kxClient, serviceProvider.GetRequiredService<IFolderWatcher>(), documentTypeConfig, vuConnector, repository, scheduler);
                     });
 
                     serviceConfig.OnStart((service, extraParams) =>
@@ -88,7 +91,9 @@ namespace Complaya.Service
             services.Configure<FolderWatcherConfiguration>(Configuration.GetSection("FolderWatcher"));
             services.Configure<DocumentTypeConfiguration>(Configuration.GetSection("DocumentTypes"));
             services.Configure<MongoConfigurationOptions>(Configuration.GetSection("MongoDatabase"));
+            services.Configure<ProcessDocumentConfiguration>(Configuration.GetSection("ProcessDocumentSchedule"));
             services.AddOptions();
+            services.AddSingleton<ServiceScheduler>();
             services.AddSingleton<Serilog.ILogger>(log);
             services.AddServices();
             serviceProvider = services.BuildServiceProvider();
